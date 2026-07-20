@@ -3,21 +3,26 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.api.v1.router import api_router
-from app.core.database import init_db, close_db
-from app.core.redis import close_redis
+from app.core.database import close_db
+from loguru import logger
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Startup and shutdown events."""
-    # Startup
-    print(f"Starting {settings.APP_NAME}...")
-    # await init_db()  # Uncomment to auto-create tables
+    logger.info(f"Starting {settings.APP_NAME}...")
+    
+    # Auto-seed database on first run
+    try:
+        from seed_production import seed_if_empty
+        seed_if_empty()
+    except Exception as e:
+        logger.warning(f"Seeding skipped: {e}")
+    
     yield
-    # Shutdown
+    
     await close_db()
-    await close_redis()
-    print(f"{settings.APP_NAME} shut down.")
+    logger.info(f"{settings.APP_NAME} shut down.")
 
 
 app = FastAPI(
@@ -29,7 +34,7 @@ app = FastAPI(
     redoc_url="/redoc",
 )
 
-# CORS
+# CORS - Allow frontend to call this API
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins_list,
@@ -54,4 +59,4 @@ async def root():
 
 @app.get("/health")
 async def health_check():
-    return {"status": "healthy", "environment": settings.ENVIRONMENT}
+    return {"status": "healthy"}

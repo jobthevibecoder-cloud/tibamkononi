@@ -1,8 +1,10 @@
 ﻿from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, DeclarativeBase
 from app.config import settings
+import os
 
-DATABASE_URL = "sqlite:///./tiba_mkononi.db"
+# Use SQLite for HF Spaces (persistent in the space)
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./tiba_mkononi.db")
 
 engine = create_engine(
     DATABASE_URL,
@@ -29,18 +31,9 @@ def get_db():
 
 
 def init_db():
-    """Create all tables for development."""
-    from app.models import (
-        County, SubCounty, Ward,
-        Hospital, Building, HospitalWard, Bed, Amenity,
-        Supplier, InventoryCategory, Medicine, StockMovement,
-        Patient, Diagnosis, Prescription,
-        Staff, Attendance, Appointment,
-        Emergency, TriageLog, DistressSignal,
-        Announcement, Report, User
-    )
+    """Create all tables."""
     Base.metadata.create_all(bind=engine)
-    print("All database tables created successfully.")
+    print("Database tables created.")
 
 
 def close_db():

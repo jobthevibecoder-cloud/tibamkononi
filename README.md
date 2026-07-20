@@ -1,37 +1,29 @@
-﻿# Tiba Mkononi - Healthcare in Your Hands
+﻿---
+title: Tiba Mkononi API
+emoji: 🏥
+colorFrom: green
+colorTo: blue
+sdk: docker
+pinned: false
+license: apache-2.0
+---
 
-Backend API for the Tiba Mkononi healthcare platform.
-Built with FastAPI, PostgreSQL, Redis, and Gemma 4.
+# Tiba Mkononi API
 
-## Quick Start
+Healthcare in Your Hands - Backend API for the Tiba Mkononi platform.
 
-`ash
-# Copy environment file
-cp .env.example .env
-# Edit .env with your values
+## Endpoints
 
-# Install dependencies
-pip install -r requirements.txt
+- `/docs` - Swagger API documentation
+- `/health` - Health check
+- `/v1/hospitals/` - Hospital management
+- `/v1/triage/analyze` - AI symptom analysis
+- `/v1/emergency/analyze` - Emergency processing
+- `/v1/appointments/` - Appointment booking
+- `/v1/county/dashboard` - County director dashboard
 
-# Start services
-docker-compose up -d db redis minio
+## Tech Stack
 
-# Run migrations
-alembic upgrade head
-
-# Start API
-uvicorn app.main:app --reload
-API docs: http://localhost:8000/docs
-
-Tech Stack
-FastAPI (Python 3.12)
-
-PostgreSQL 16 + PostGIS
-
-Redis
-
-Gemma 4 (Hugging Face)
-
-Celery
-
-Docker
+- FastAPI (Python 3.12)
+- SQLite Database
+- Gemma 4 AI (Hugging Face Inference API)
