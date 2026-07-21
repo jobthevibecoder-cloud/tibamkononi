@@ -8,18 +8,13 @@ from loguru import logger
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Startup and shutdown events."""
     logger.info(f"Starting {settings.APP_NAME}...")
-    
-    # Auto-seed database on first run
     try:
         from seed_production import seed_if_empty
         seed_if_empty()
     except Exception as e:
         logger.warning(f"Seeding skipped: {e}")
-    
     yield
-    
     logger.info(f"{settings.APP_NAME} shut down.")
 
 
@@ -32,7 +27,6 @@ app = FastAPI(
     redoc_url="/redoc",
 )
 
-# CORS - Allow frontend to call this API
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins_list,
@@ -41,18 +35,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Routes
 app.include_router(api_router, prefix=settings.API_V1_PREFIX)
 
 
 @app.get("/")
 async def root():
-    return {
-        "name": settings.APP_NAME,
-        "version": "0.1.0",
-        "status": "running",
-        "docs": "/docs",
-    }
+    return {"name": settings.APP_NAME, "version": "0.1.0", "status": "running", "docs": "/docs"}
 
 
 @app.get("/health")
