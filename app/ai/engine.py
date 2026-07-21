@@ -1,6 +1,5 @@
 ﻿"""Gemma 4 via Hugging Face Inference API."""
 import requests
-import json
 import os
 from loguru import logger
 
@@ -18,7 +17,6 @@ class GemmaEngine:
             return
         self._initialized = True
         
-        # Check for token
         self.hf_token = os.getenv("HF_TOKEN", "")
         
         if self.hf_token:
@@ -34,7 +32,6 @@ class GemmaEngine:
         return self._mock_response(prompt)
     
     def _api_generate(self, prompt: str, max_tokens: int) -> str:
-        """Call Hugging Face Inference API with real Gemma 4."""
         try:
             headers = {"Authorization": f"Bearer {self.hf_token}"}
             payload = {
@@ -65,7 +62,7 @@ class GemmaEngine:
                     return text
                 return str(result)
             else:
-                logger.error(f"HF API error: {response.status_code} - {response.text}")
+                logger.error(f"HF API error: {response.status_code}")
                 return self._mock_response(prompt)
                 
         except Exception as e:
@@ -89,12 +86,11 @@ class GemmaEngine:
             return '{"ranked_hospitals": [{"name": "Mama Ngina Hospital", "score": 88, "reason": "Tests available, doctor present, short wait"}, {"name": "Likoni PHC", "score": 55, "reason": "Closer but no doctor available"}], "recommendation": "Go to Mama Ngina Hospital for best care."}'
         
         if "daily" in prompt_lower or "summary" in prompt_lower:
-            return '{"summary": "Today the hospital treated 87 patients with 12 admissions and 8 discharges. Stock levels are adequate with 2 warnings.", "recommendations": ["Restock paediatric amoxicillin", "Review attendance patterns"], "prediction": "Expect similar load tomorrow."}'
+            return '{"summary": "Today the hospital treated 87 patients.", "recommendations": ["Restock paediatric amoxicillin"], "prediction": "Expect similar load tomorrow."}'
         
         if "attendance" in prompt_lower:
-            return '{"pattern_detected": true, "pattern_description": "Absent on Mondays and Fridays for 3 weeks", "impact": "Patient wait times increase 3x on affected days", "recommendation": "Schedule discussion and arrange locum coverage"}'
+            return '{"pattern_detected": true, "pattern_description": "Absent on Mondays and Fridays", "impact": "Patient wait times increase 3x", "recommendation": "Schedule discussion and arrange locum coverage"}'
         
         return '{"analysis": "Analysis complete", "recommendation": "Proceed with standard protocol"}'
 
-# Global instance
 gemma = GemmaEngine()

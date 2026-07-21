@@ -3,7 +3,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.api.v1.router import api_router
-from app.core.database import close_db
 from loguru import logger
 
 
@@ -21,7 +20,6 @@ async def lifespan(app: FastAPI):
     
     yield
     
-    await close_db()
     logger.info(f"{settings.APP_NAME} shut down.")
 
 
