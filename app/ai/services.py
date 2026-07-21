@@ -1,4 +1,4 @@
-﻿"""AI service functions - handles Gemma 4 31B output format."""
+﻿"""AI service functions - fixed diagnosis extraction."""
 import json
 import re
 from app.ai.engine import gemma
@@ -14,7 +14,7 @@ def _parse_json_response(response: str) -> dict:
     """Extract structured data from Gemma 4 output."""
     cleaned = response.strip()
     
-    # Strategy 1: Try to find a complete JSON object
+    # Strategy 1: Try complete JSON object
     start = cleaned.find('{')
     end = cleaned.rfind('}') + 1
     if start >= 0 and end > start:
@@ -23,18 +23,12 @@ def _parse_json_response(response: str) -> dict:
         except json.JSONDecodeError:
             pass
     
-    # Strategy 2: Extract from backtick-enclosed JSON blocks
-    backtick_blocks = re.findall(r'`([^`]+)`', cleaned)
-    if backtick_blocks:
-        # Try to reconstruct JSON from backtick values
-        return _parse_backtick_format(cleaned, backtick_blocks)
-    
-    # Strategy 3: Extract key fields from the explanation text
-    return _extract_from_explanation(cleaned)
+    # Strategy 2: Extract from backtick-enclosed values
+    return _parse_backtick_format(cleaned)
 
 
-def _parse_backtick_format(text: str, blocks: list) -> dict:
-    """Parse Gemma's explanation + backtick format."""
+def _parse_backtick_format(text: str) -> dict:
+    """Parse Gemma 4's `key`: `value` format."""
     result = {"diagnosis": [], "triage_level": "ROUTINE", "tests": [], "treatment": [], "self_care": []}
     
     # Extract triage_level
@@ -42,68 +36,55 @@ def _parse_backtick_format(text: str, blocks: list) -> dict:
     if triage:
         result["triage_level"] = triage.group(1).upper()
     
-    # Extract diagnosis array
-    diagnosis_str = re.search(r'`diagnosis`\s*:\s*`(\[.*?\])`', text)
-    if diagnosis_str:
+    # Extract diagnosis - find the array between backticks after "diagnosis"
+    diag_match = re.search(r'`diagnosis`\s*:\s*`(\[.*?\])`', text, re.DOTALL)
+    if not diag_match:
+        # Try without backticks around the value
+        diag_match = re.search(r'"diagnosis"\s*:\s*(\[.*?\])', text, re.DOTALL)
+    if diag_match:
         try:
-            result["diagnosis"] = json.loads(diagnosis_str.group(1))
+            diag_str = diag_match.group(1)
+            # Clean any trailing commas or whitespace
+            diag_str = diag_str.strip()
+            result["diagnosis"] = json.loads(diag_str)
+        except json.JSONDecodeError as e:
+            logger.warning(f"Diagnosis parse failed: {e} for: {diag_match.group(1)[:100]}")
+    
+    # Extract tests
+    tests_match = re.search(r'`tests`\s*:\s*`(\[.*?\])`', text, re.DOTALL)
+    if not tests_match:
+        tests_match = re.search(r'"tests"\s*:\s*(\[.*?\])', text, re.DOTALL)
+    if tests_match:
+        try:
+            result["tests"] = json.loads(tests_match.group(1))
         except json.JSONDecodeError:
             pass
     
-    # Extract tests array
-    tests_str = re.search(r'`tests`\s*:\s*`(\[.*?\])`', text)
-    if tests_str:
+    # Extract treatment
+    treatment_match = re.search(r'`treatment`\s*:\s*`(\[.*?\])`', text, re.DOTALL)
+    if not treatment_match:
+        treatment_match = re.search(r'"treatment"\s*:\s*(\[.*?\])', text, re.DOTALL)
+    if treatment_match:
         try:
-            result["tests"] = json.loads(tests_str.group(1))
+            result["treatment"] = json.loads(treatment_match.group(1))
         except json.JSONDecodeError:
             pass
     
-    # Extract treatment array
-    treatment_str = re.search(r'`treatment`\s*:\s*`(\[.*?\])`', text)
-    if treatment_str:
+    # Extract self_care
+    care_match = re.search(r'`self_care`\s*:\s*`(\[.*?\])`', text, re.DOTALL)
+    if not care_match:
+        care_match = re.search(r'"self_care"\s*:\s*(\[.*?\])', text, re.DOTALL)
+    if care_match:
         try:
-            result["treatment"] = json.loads(treatment_str.group(1))
+            result["self_care"] = json.loads(care_match.group(1))
         except json.JSONDecodeError:
             pass
     
-    # Extract self_care array
-    care_str = re.search(r'`self_care`\s*:\s*`(\[.*?\])`', text)
-    if care_str:
-        try:
-            result["self_care"] = json.loads(care_str.group(1))
-        except json.JSONDecodeError:
-            pass
-    
-    return result
-
-
-def _extract_from_explanation(text: str) -> dict:
-    """Fallback: extract key info from natural language explanation."""
-    result = {"diagnosis": [], "triage_level": "ROUTINE", "tests": [], "treatment": [], "self_care": []}
-    
-    # Triage level
-    triage = re.search(r'(?:triage|Triage)[^:]*:\s*(\w+)', text)
-    if triage:
-        level = triage.group(1).upper()
-        if level in ["EMERGENCY", "URGENT", "ROUTINE"]:
-            result["triage_level"] = level
-    
-    # Diseases with confidence
-    diseases = re.findall(r'(?:diagnosis|Diagnosis)[^:]*:\s*(\w[\w\s]+?)\s*\([^)]*?confidence[^)]*?([0-9.]+)', text, re.IGNORECASE)
-    if not diseases:
+    # Fallback: extract diagnosis from natural language if regex failed
+    if not result["diagnosis"]:
         diseases = re.findall(r'"disease"\s*:\s*"([^"]+)".*?"confidence"\s*:\s*([0-9.]+)', text)
-    for disease, confidence in diseases:
-        result["diagnosis"].append({"disease": disease.strip(), "confidence": float(confidence)})
-    
-    # Tests
-    tests = re.search(r'(?:tests|Tests)[^:]*:\s*\[(.*?)\]', text)
-    if tests:
-        result["tests"] = [t.strip().strip('"') for t in tests.group(1).split(',')]
-    
-    # Treatments
-    treatments = re.findall(r'"medicine"\s*:\s*"([^"]+)".*?"dosage"\s*:\s*"([^"]+)"', text)
-    for med, dose in treatments:
-        result["treatment"].append({"medicine": med, "dosage": dose})
+        for disease, confidence in diseases:
+            result["diagnosis"].append({"disease": disease, "confidence": float(confidence)})
     
     return result
 
