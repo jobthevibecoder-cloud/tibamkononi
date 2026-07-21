@@ -17,6 +17,15 @@ Fill in this JSON exactly:
 
 Return ONLY the filled JSON. No other text."""
 
+EMERGENCY_PHOTO_PROMPT = """Emergency photo analysis.
+Scene: {photo_description}
+GPS: {latitude}, {longitude}
+
+Fill in this JSON exactly:
+{{"emergency_type":"TYPE","severity":"LEVEL","casualties_estimated":0,"hazards_detected":"HAZARDS","auto_message":"MESSAGE IN {language}"}}
+
+Return ONLY the filled JSON. No other text."""
+
 STOCK_FORECAST_PROMPT = """Medicine: {medicine_name}
 Stock: {current_stock} {unit} | Daily use: {daily_rate} | Threshold: {threshold} | Last restock: {last_restock}
 Nearby hospitals: {nearby_hospitals}
