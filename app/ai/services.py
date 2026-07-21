@@ -1,5 +1,6 @@
-﻿"""AI service functions that use Gemma 4 for specific tasks."""
+﻿"""AI service functions."""
 import json
+import re
 from app.ai.engine import gemma
 from app.ai.prompts import (
     DIAGNOSIS_PROMPT, EMERGENCY_TEXT_PROMPT, EMERGENCY_PHOTO_PROMPT,
@@ -10,19 +11,28 @@ from loguru import logger
 
 
 def _parse_json_response(response: str) -> dict:
-    """Extract JSON from Gemma response."""
-    try:
-        start = response.find("{")
-        end = response.rfind("}") + 1
-        if start >= 0 and end > start:
-            return json.loads(response[start:end])
-    except json.JSONDecodeError:
-        pass
-    return {"raw_response": response}
+    """Extract JSON from Gemma response, handling markdown and explanations."""
+    # Remove markdown code blocks
+    cleaned = re.sub(r'```(?:json)?\s*', '', response)
+    cleaned = cleaned.replace('```', '')
+    
+    # Try to find JSON object
+    start = cleaned.find('{')
+    end = cleaned.rfind('}') + 1
+    
+    if start >= 0 and end > start:
+        try:
+            return json.loads(cleaned[start:end])
+        except json.JSONDecodeError:
+            pass
+    
+    # If no JSON found, return raw response
+    logger.warning(f"Could not parse JSON from: {response[:100]}...")
+    return {"raw_response": response, "triage_level": "ROUTINE", "diagnosis": []}
 
 
 def analyze_symptoms(symptoms_text: str, language: str, age: int, gender: str) -> dict:
-    prompt = DIAGNOSIS_PROMPT.format(age=age, gender=gender, language=language, symptoms=symptoms_text)
+    prompt = DIAGNOSIS_PROMPT.format(age=age, gender=gender, symptoms=symptoms_text)
     response = gemma.generate(prompt, max_tokens=400)
     return _parse_json_response(response)
 

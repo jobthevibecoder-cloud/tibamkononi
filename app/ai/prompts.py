@@ -1,132 +1,82 @@
 ﻿"""Prompt templates for all Gemma 4 interactions."""
 
-DIAGNOSIS_PROMPT = """You are a medical AI at a Kenyan hospital. Analyze these symptoms.
+DIAGNOSIS_PROMPT = """You are a medical AI. Output ONLY a JSON object. No explanations, no markdown, no text before or after the JSON.
 
 Patient: {age}y/o {gender}
-Symptoms ({language}): {symptoms}
-Location: Coastal Kenya (consider malaria, typhoid, dengue)
+Symptoms: {symptoms}
+Location: Coastal Kenya
 
-Output JSON with:
-- diagnosis: top 3 diseases with confidence scores (0-1)
-- triage_level: EMERGENCY/URGENT/ROUTINE
-- recommended_tests: list of tests needed
-- recommended_treatment: list with medicine name and dosage
-- self_care_advice: what patient can do now
+Output this exact structure:
+{{"diagnosis":[{{"disease":"name","confidence":0.0}}],"triage_level":"EMERGENCY|URGENT|ROUTINE","tests":["test"],"treatment":[{{"medicine":"name","dosage":"instructions"}}],"self_care":["advice"]}}
 
 JSON:"""
 
-EMERGENCY_PHOTO_PROMPT = """Analyze this emergency scene photo from Mombasa, Kenya.
+EMERGENCY_TEXT_PROMPT = """You are an emergency dispatcher AI. Output ONLY a JSON object. No explanations.
 
-Scene description: {photo_description}
-GPS Location: {latitude}, {longitude}
+Emergency ({language}): {text}
+GPS: {latitude}, {longitude}
 
-Output JSON with:
-- emergency_type: ROAD_ACCIDENT/FIRE/MEDICAL/OBSTETRIC/OTHER
-- severity: CRITICAL/SEVERE/MODERATE
-- casualties_estimated: number
-- hazards_detected: any dangers
-- auto_message: dispatch message in {language}
+Output:
+{{"emergency_type":"ROAD_ACCIDENT|FIRE|MEDICAL|OBSTETRIC|OTHER","severity":"CRITICAL|SEVERE|MODERATE","casualties_estimated":0,"hazards_detected":"description","auto_message":"dispatch message"}}
 
 JSON:"""
 
-EMERGENCY_TEXT_PROMPT = """Analyze this emergency report from Mombasa, Kenya.
+EMERGENCY_PHOTO_PROMPT = """Analyze this emergency photo. Output ONLY JSON. No explanations.
 
-Emergency description ({language}): {text}
-GPS Location: {latitude}, {longitude}
+Scene: {photo_description}
+GPS: {latitude}, {longitude}
 
-Output JSON with:
-- emergency_type: ROAD_ACCIDENT/FIRE/MEDICAL/OBSTETRIC/OTHER
-- severity: CRITICAL/SEVERE/MODERATE
-- casualties_estimated: number
-- hazards_detected: any dangers
-- auto_message: professional dispatch message in {language}
+Output:
+{{"emergency_type":"type","severity":"CRITICAL|SEVERE|MODERATE","casualties_estimated":0,"hazards_detected":"description","auto_message":"message in {language}"}}
 
 JSON:"""
 
-STOCK_FORECAST_PROMPT = """Analyze inventory and predict stock depletion.
+STOCK_FORECAST_PROMPT = """Analyze inventory. Output ONLY JSON. No explanations.
 
-Medicine: {medicine_name}
-Current stock: {current_stock} {unit}
-Daily usage rate: {daily_rate} {unit}/day
-Minimum threshold: {threshold}
-Last restock: {last_restock}
+Medicine: {medicine_name} | Stock: {current_stock} {unit} | Daily use: {daily_rate} | Threshold: {threshold}
 
-Nearby hospitals with this medicine: {nearby_hospitals}
-
-Output JSON with:
-- days_until_stockout: number
-- severity: CRITICAL/WARNING/OK
-- recommended_action: transfer or order
-- suggested_source: best hospital to transfer from
-- suggested_quantity: how much to transfer
-- ai_message: summary for distress signal
+Output:
+{{"days_until_stockout":0,"severity":"CRITICAL|WARNING|OK","recommended_action":"action","suggested_quantity":0,"ai_message":"summary"}}
 
 JSON:"""
 
-HOSPITAL_RANKING_PROMPT = """Rank hospitals for a patient based on multiple factors.
+HOSPITAL_RANKING_PROMPT = """Rank hospitals for a patient. Output ONLY JSON. No explanations.
 
-Patient location: {patient_lat}, {patient_lng}
-Required tests: {required_tests}
-Required medicines: {required_medicines}
+Patient at ({patient_lat},{patient_lng}). Needs: {required_tests}, {required_medicines}
+Hospitals: {hospitals_json}
 
-Available hospitals: {hospitals_json}
-
-Consider: distance, test availability, medicine stock, doctor presence, wait time.
-Output JSON with ranked list and recommendation in {language}.
+Output:
+{{"ranked_hospitals":[{{"name":"hospital","score":0,"reason":"reason"}}],"recommendation":"best choice"}}
 
 JSON:"""
 
-OUTBREAK_DETECTION_PROMPT = """Analyze recent patient data for disease clustering.
+DAILY_SUMMARY_PROMPT = """Generate hospital report. Output ONLY JSON. No explanations.
 
-Recent patients (24h): {patients_json}
+Hospital: {hospital_name} | Date: {date}
+Patients: {total_patients} | Admissions: {admissions} | Discharges: {discharges}
+Alerts: {alerts} | Beds: {bed_percent}% | Staff: {staff_count}/{total_staff}
 
-Look for: common symptoms, geographic clustering, unusual frequency.
-Output JSON with:
-- outbreak_detected: true/false
-- disease_suspected: name
-- confidence: 0-1
-- affected_area: location
-- recommended_action: what to do
+Output:
+{{"summary":"report","recommendations":["action"],"prediction":"forecast"}}
 
 JSON:"""
 
-DAILY_SUMMARY_PROMPT = """Generate a daily hospital report.
+ATTENDANCE_ANOMALY_PROMPT = """Analyze attendance. Output ONLY JSON. No explanations.
 
-Hospital: {hospital_name}
-Date: {date}
-Patients seen: {total_patients}
-Admissions: {admissions}
-Discharges: {discharges}
-Stock alerts: {alerts}
-Bed occupancy: {bed_percent}%
-Staff present: {staff_count}/{total_staff}
+Staff: {staff_name} ({role})
+Records: {attendance_data}
 
-Write a concise summary in {language}. Include predictions for tomorrow.
-Output JSON with summary and recommendations.
+Output:
+{{"pattern_detected":true|false,"pattern_description":"description","impact":"impact","recommendation":"action"}}
 
 JSON:"""
 
-ATTENDANCE_ANOMALY_PROMPT = """Analyze staff attendance patterns.
+REDISTRIBUTION_PROMPT = """Recommend redistribution. Output ONLY JSON. No explanations.
 
-Staff member: {staff_name}, Role: {role}
-Attendance last 30 days: {attendance_data}
+{resource} at {hospital_name}: {current} units, {daily_rate}/day, {hours}h until out.
+Nearby: {nearby_json}
 
-Detect patterns, calculate impact on patient care, recommend action.
-Output JSON.
-
-JSON:"""
-
-REDISTRIBUTION_PROMPT = """Recommend resource redistribution between hospitals.
-
-Requesting hospital: {hospital_name}
-Resource needed: {resource}
-Current stock: {current} units
-Daily usage: {daily_rate}
-Hours until depletion: {hours}
-
-Nearby hospitals with surplus: {nearby_json}
-
-Consider: distance, surplus quantity, each hospital's own usage rate.
-Output JSON with recommended transfer plan.
+Output:
+{{"suggested_source":"hospital","suggested_quantity":0,"ai_message":"recommendation"}}
 
 JSON:"""
