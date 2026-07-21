@@ -1,4 +1,4 @@
-﻿"""Gemma 4 via Google Gemini API - With system prompt for JSON."""
+﻿"""Gemma 4 via Google Gemini API - 31B model for better JSON output."""
 import requests
 import os
 from loguru import logger
@@ -18,7 +18,7 @@ class GemmaEngine:
         self._initialized = True
         
         self.api_key = os.getenv("GEMINI_API_KEY", "")
-        self.model = "gemma-4-26b-a4b-it"
+        self.model = "gemma-4-31b-it"  # Stronger reasoning, better JSON
         
         if self.api_key:
             self._use_api = True
@@ -27,7 +27,7 @@ class GemmaEngine:
             self._use_api = False
             logger.warning("No GEMINI_API_KEY - using mock responses")
     
-    def generate(self, prompt: str, max_tokens: int = 400) -> str:
+    def generate(self, prompt: str, max_tokens: int = 500) -> str:
         if self._use_api:
             result = self._api_generate(prompt, max_tokens)
             if result:
@@ -36,7 +36,7 @@ class GemmaEngine:
         return self._mock_response(prompt)
     
     def _api_generate(self, prompt: str, max_tokens: int) -> str:
-        """Call Google Gemini API with system instruction for JSON-only output."""
+        """Call Google Gemini API with Gemma 4 31B."""
         try:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent"
             
@@ -56,28 +56,29 @@ class GemmaEngine:
                 }
             }
             
-            logger.info("Calling Gemma 4 via Gemini API...")
+            logger.info(f"Calling Gemma 4 31B via Gemini API...")
             
             response = requests.post(
                 url,
                 params={"key": self.api_key},
                 json=payload,
-                timeout=30,
+                timeout=45,
             )
             
             if response.status_code == 200:
                 data = response.json()
                 text = data.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "")
                 if text:
-                    # Clean response - strip any markdown or leading text
                     text = text.strip()
                     if '{' in text:
                         text = text[text.find('{'):text.rfind('}')+1]
-                    logger.info(f"Gemma 4: {text[:80]}...")
+                    logger.info(f"Gemma 4 31B: {text[:100]}...")
                     return text
                 return None
             elif response.status_code == 429:
-                logger.error("Rate limited")
+                logger.error("Rate limited. Pausing...")
+                import time
+                time.sleep(3)
                 return None
             else:
                 logger.error(f"API error {response.status_code}: {response.text[:200]}")
