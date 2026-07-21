@@ -1,0 +1,14 @@
+﻿services:
+  - type: web
+    name: tiba-mkononi-api
+    env: python
+    region: frankfurt
+    buildCommand: pip install -r requirements-hf.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: CORS_ORIGINS
+        value: '["https://tiba-mkononi.vercel.app","http://localhost:3000","http://localhost:3001","*"]'
+      - key: SECRET_KEY
+        generateValue: true
