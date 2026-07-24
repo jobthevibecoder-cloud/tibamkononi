@@ -8,13 +8,17 @@ from loguru import logger
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    """Startup and shutdown events."""
     logger.info(f"Starting {settings.APP_NAME}...")
+    
     try:
-        from seed_production import seed_if_empty
-        seed_if_empty()
+        from seed_demo import clear_and_seed
+        clear_and_seed()
     except Exception as e:
         logger.warning(f"Seeding skipped: {e}")
+    
     yield
+    
     logger.info(f"{settings.APP_NAME} shut down.")
 
 
@@ -40,7 +44,12 @@ app.include_router(api_router, prefix=settings.API_V1_PREFIX)
 
 @app.get("/")
 async def root():
-    return {"name": settings.APP_NAME, "version": "0.1.0", "status": "running", "docs": "/docs"}
+    return {
+        "name": settings.APP_NAME,
+        "version": "0.1.0",
+        "status": "running",
+        "docs": "/docs",
+    }
 
 
 @app.get("/health")
