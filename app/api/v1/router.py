@@ -1,5 +1,5 @@
 ﻿from fastapi import APIRouter
-from app.api.v1 import hospitals, emergency, triage, auth, appointments, county, distress, inventory, staff, announcements
+from app.api.v1 import hospitals, emergency, triage, auth, appointments, county, distress, inventory, staff, announcements, patients
 
 api_router = APIRouter()
 
@@ -13,3 +13,4 @@ api_router.include_router(distress.router, prefix="/hospitals", tags=["Distress 
 api_router.include_router(inventory.router, prefix="/hospitals", tags=["Inventory"])
 api_router.include_router(staff.router, prefix="/hospitals", tags=["Staff"])
 api_router.include_router(announcements.router, prefix="/announcements", tags=["Announcements"])
+api_router.include_router(patients.router, prefix="/hospitals", tags=["Patients"])

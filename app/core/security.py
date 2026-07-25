@@ -1,4 +1,20 @@
-﻿from datetime import datetime, timedelta, timezone
+﻿"""Security utilities - with bcrypt password length fix."""
+import bcrypt as _bcrypt
+
+# Monkey-patch bcrypt to auto-truncate passwords
+_original_hashpw = _bcrypt.hashpw
+
+def _patched_hashpw(password, salt):
+    if isinstance(password, str):
+        password = password.encode()
+    if len(password) > 72:
+        password = password[:72]
+    return _original_hashpw(password, salt)
+
+_bcrypt.hashpw = _patched_hashpw
+
+# Now import the rest
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 from jose import JWTError, jwt
 from passlib.context import CryptContext

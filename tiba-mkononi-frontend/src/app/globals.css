@@ -1,0 +1,137 @@
+﻿@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --clay-bg: #f5f5f4;
+  --clay-primary: #78350f;
+  --clay-primary-2: #92400e;
+  --clay-accent: #b45309;
+}
+
+body {
+  background-color: var(--clay-bg);
+  background-image: radial-gradient(circle at 20% 20%, rgba(180, 83, 9, 0.06), transparent 40%),
+    radial-gradient(circle at 80% 70%, rgba(120, 53, 15, 0.05), transparent 40%);
+  color: #1c1917;
+}
+
+/* Claymorphism primitive: one offset outer shadow + two inner shadows
+   (lighter top-left, darker bottom-right) on heavily rounded shapes */
+
+.clay-card {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 28px;
+  box-shadow:
+    10px 10px 24px rgba(120, 113, 108, 0.22),
+    inset 2px 2px 3px rgba(255, 255, 255, 0.95),
+    inset -3px -3px 8px rgba(120, 113, 108, 0.15);
+}
+
+.clay-card-flat {
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 22px;
+  box-shadow:
+    inset 2px 2px 4px rgba(255, 255, 255, 0.9),
+    inset -3px -3px 6px rgba(120, 113, 108, 0.12);
+}
+
+.clay-btn {
+  background: linear-gradient(150deg, #92400e 0%, #78350f 100%);
+  color: #fff7ed;
+  border-radius: 20px;
+  box-shadow:
+    6px 6px 16px rgba(87, 60, 20, 0.4),
+    inset 2px 2px 3px rgba(255, 255, 255, 0.3),
+    inset -3px -3px 6px rgba(0, 0, 0, 0.25);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease;
+}
+.clay-btn:hover {
+  transform: translateY(-1px);
+}
+.clay-btn:active {
+  transform: translateY(1px);
+  box-shadow:
+    inset 4px 4px 10px rgba(0, 0, 0, 0.35),
+    inset -2px -2px 5px rgba(255, 255, 255, 0.15);
+}
+.clay-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.clay-btn-secondary {
+  background: rgba(255, 255, 255, 0.75);
+  color: #78350f;
+  border-radius: 20px;
+  box-shadow:
+    6px 6px 14px rgba(120, 113, 108, 0.2),
+    inset 2px 2px 3px rgba(255, 255, 255, 0.9),
+    inset -2px -2px 5px rgba(120, 113, 108, 0.12);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+.clay-btn-secondary:active {
+  transform: translateY(1px);
+  box-shadow:
+    inset 3px 3px 8px rgba(120, 113, 108, 0.25),
+    inset -2px -2px 4px rgba(255, 255, 255, 0.8);
+}
+
+.clay-input {
+  background: rgba(255, 255, 255, 0.65);
+  border-radius: 18px;
+  border: 1px solid rgba(214, 211, 209, 0.6);
+  box-shadow:
+    inset 3px 3px 6px rgba(120, 113, 108, 0.18),
+    inset -3px -3px 6px rgba(255, 255, 255, 0.85);
+  transition: box-shadow 0.15s ease;
+}
+.clay-input:focus {
+  outline: none;
+  box-shadow:
+    inset 3px 3px 6px rgba(120, 113, 108, 0.18),
+    inset -3px -3px 6px rgba(255, 255, 255, 0.85),
+    0 0 0 3px rgba(180, 83, 9, 0.35);
+}
+
+.clay-pill {
+  border-radius: 999px;
+}
+
+.tab-active {
+  background-color: #78350f;
+  color: #fff7ed;
+  box-shadow:
+    4px 4px 10px rgba(87, 60, 20, 0.35),
+    inset 1px 1px 2px rgba(255, 255, 255, 0.25);
+}
+.tab-inactive {
+  color: #78716c;
+}
+.tab-inactive:hover {
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.clay-progress-track {
+  background: rgba(120, 113, 108, 0.15);
+  border-radius: 999px;
+  box-shadow: inset 2px 2px 4px rgba(120, 113, 108, 0.2);
+  overflow: hidden;
+}
+.clay-progress-fill {
+  background: linear-gradient(90deg, #b45309, #78350f);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(120, 113, 108, 0.35);
+  border-radius: 999px;
+}

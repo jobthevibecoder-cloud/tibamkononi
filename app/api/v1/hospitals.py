@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from typing import Optional
 from pydantic import BaseModel
 from app.core.database import get_db
+from app.models.hospital import Hospital
 from app.services.hospital_service import (
     register_hospital, get_hospitals_by_county, get_hospital_by_slug,
     approve_hospital, reject_hospital
@@ -32,11 +33,37 @@ class HospitalRegisterRequest(BaseModel):
 @router.get("/")
 async def list_hospitals(
     county_id: Optional[str] = Query(None),
-    status: Optional[str] = Query("APPROVED"),
+    status: Optional[str] = Query(None),
     db: Session = Depends(get_db)
 ):
     """List hospitals with optional filters."""
-    return {"hospitals": [], "total": 0, "message": "Connect database for real data"}
+    query = db.query(Hospital)
+    
+    if status:
+        query = query.filter(Hospital.status == status)
+    else:
+        query = query.filter(Hospital.status == "APPROVED")
+    
+    hospitals = query.order_by(Hospital.name).all()
+    
+    return {
+        "hospitals": [
+            {
+                "id": h.id,
+                "name": h.name,
+                "slug": h.slug,
+                "type": h.type,
+                "status": h.status,
+                "location": h.physical_address,
+                "phone": h.phone,
+                "email": h.email,
+                "director": h.director_name,
+                "performance_score": h.performance_score,
+            }
+            for h in hospitals
+        ],
+        "total": len(hospitals)
+    }
 
 
 @router.post("/register")
@@ -60,7 +87,19 @@ async def get_hospital(slug: str, db: Session = Depends(get_db)):
     hospital = get_hospital_by_slug(db, slug)
     if not hospital:
         raise HTTPException(status_code=404, detail="Hospital not found")
-    return {"hospital": {"id": hospital.id, "name": hospital.name, "slug": hospital.slug}}
+    return {
+        "hospital": {
+            "id": hospital.id,
+            "name": hospital.name,
+            "slug": hospital.slug,
+            "type": hospital.type,
+            "status": hospital.status,
+            "location": hospital.physical_address,
+            "phone": hospital.phone,
+            "director": hospital.director_name,
+            "performance_score": hospital.performance_score,
+        }
+    }
 
 
 @router.post("/{hospital_id}/approve")
